@@ -8,7 +8,7 @@ const btnPDF     = document.getElementById('btn-export-pdf');
 const btnIMG     = document.getElementById('btn-export-img');
 
 // 1) Inicializar cámara trasera
-navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+navigator.mediaDevices.let stream = null;({ video: { facingMode: 'environment' } })
   .then(stream => video.srcObject = stream)
   .catch(err => alert('No se pudo acceder a la cámara: ' + err));
 
