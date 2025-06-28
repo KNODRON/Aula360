@@ -1,4 +1,22 @@
-// app.js
+let stream = null;
+
+btnCapture.addEventListener('click', async () => {
+  // Sólo pedir permiso la primera vez, dentro del click
+  if (!stream) {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      });
+      video.srcObject = stream;
+      await video.play();
+    } catch (err) {
+      alert('No se pudo acceder a la cámara:\n' + err.message);
+      return;
+    }
+  }
+
+  // ...resto de la captura y recorte
+});// app.js
 
 // Referencias en el DOM
 const video      = document.getElementById('preview');
