@@ -1,23 +1,40 @@
 // app.js
 
-// 1) Referencias
-const video       = document.getElementById('preview');
-const canvas      = document.getElementById('canvas');
-const btnCapture  = document.getElementById('btn-capture');
-const btnIMG      = document.getElementById('btn-export-img');
-const btnPDF      = document.getElementById('btn-export-pdf');
-const btnBW       = document.getElementById('btn-bw');
-const btnContrast = document.getElementById('btn-contrast');
-const btnOCR      = document.getElementById('btn-ocr');
-const btnMerge    = document.getElementById('btn-merge');
-const carousel    = document.getElementById('page-carousel');
-const ocrResult   = document.getElementById('ocr-result');
+// 1) Referencias en el DOM
+const video        = document.getElementById('preview');
+const canvas       = document.getElementById('canvas');
+const btnCapture   = document.getElementById('btn-capture');
+const btnIMG       = document.getElementById('btn-export-img');
+const btnPDF       = document.getElementById('btn-export-pdf');
+const btnBW        = document.getElementById('btn-bw');
+const btnContrast  = document.getElementById('btn-contrast');
+const btnOCR       = document.getElementById('btn-ocr');
+const btnMerge     = document.getElementById('btn-merge');
+const carousel     = document.getElementById('page-carousel');
+const ocrResult    = document.getElementById('ocr-result');
 
-let pages = [];  // canvases escaneados
+let pages  = [];    // Array de canvases escaneados
+let stream = null; // MediaStream de la cámara
 
-// 2) crop con OpenCV
+// 2) Al cargar OpenCV, arrancamos la vista previa y habilitamos “Capturar”
+window.onOpenCvReady = async function() {
+  btnCapture.disabled = false;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' }
+    });
+    video.srcObject = stream;
+    await video.play();
+  } catch (err) {
+    alert('No se pudo acceder a la cámara:\n' + err.message);
+  }
+};
+
+
+// 3) Recorte con OpenCV
 async function cropDocument(inputCanvas) {
   if (!window.cv || !cv.imread) return inputCanvas;
+
   const src      = cv.imread(inputCanvas);
   const gray     = new cv.Mat();
   const edges    = new cv.Mat();
@@ -31,15 +48,15 @@ async function cropDocument(inputCanvas) {
   cv.morphologyEx(edges, edges, cv.MORPH_CLOSE, Mkernel);
 
   cv.findContours(edges, contours, hier, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
   let maxArea = 0, bestCnt = null;
-  for (let i=0; i<contours.size(); i++){
+  for (let i = 0; i < contours.size(); i++) {
     const cnt = contours.get(i);
     const area = cv.contourArea(cnt);
-    if(area>maxArea){ maxArea=area; bestCnt=cnt; }
+    if (area > maxArea) { maxArea = area; bestCnt = cnt; }
   }
-  if(!bestCnt){
-    src.delete(); gray.delete(); edges.delete();
-    contours.delete(); hier.delete(); Mkernel.delete();
+  if (!bestCnt) {
+    src.delete(); gray.delete(); edges.delete(); contours.delete(); hier.delete(); Mkernel.delete();
     return inputCanvas;
   }
 
@@ -52,129 +69,158 @@ async function cropDocument(inputCanvas) {
     boxPts[3].x, boxPts[3].y
   ]);
 
-  const w = Math.hypot(boxPts[1].x-boxPts[0].x, boxPts[1].y-boxPts[0].y);
-  const h = Math.hypot(boxPts[2].x-boxPts[1].x, boxPts[2].y-boxPts[1].y);
+  const w = Math.hypot(boxPts[1].x - boxPts[0].x, boxPts[1].y - boxPts[0].y);
+  const h = Math.hypot(boxPts[2].x - boxPts[1].x, boxPts[2].y - boxPts[1].y);
   const dstPts = cv.matFromArray(4,1,cv.CV_32FC2, [0,0, w-1,0, w-1,h-1, 0,h-1]);
 
-  const M = cv.getPerspectiveTransform(srcPts,dstPts);
+  const M   = cv.getPerspectiveTransform(srcPts, dstPts);
   const dst = new cv.Mat();
-  cv.warpPerspective(src, dst, M, new cv.Size(w,h));
+  cv.warpPerspective(src, dst, M, new cv.Size(w, h));
 
   const out = document.createElement('canvas');
-  out.width=w; out.height=h;
+  out.width  = w;
+  out.height = h;
   cv.imshow(out, dst);
 
   src.delete(); gray.delete(); edges.delete();
   contours.delete(); hier.delete(); Mkernel.delete();
   bestCnt.delete(); srcPts.delete(); dstPts.delete(); M.delete(); dst.delete();
+
   return out;
 }
 
-// 3) trim blanco sobrante
+// 4) Quitar márgenes blancos sobrantes
 function autoTrimCanvas(c) {
-  const w=c.width,h=c.height,ctx=c.getContext('2d'),d=ctx.getImageData(0,0,w,h).data;
-  let xMin=w,xMax=0,yMin=h,yMax=0;
-  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-    const i=(y*w+x)*4, sum=d[i]+d[i+1]+d[i+2];
-    if(sum<755){ xMin=Math.min(xMin,x);xMax=Math.max(xMax,x);
-                 yMin=Math.min(yMin,y);yMax=Math.max(yMax,y);}
+  const w = c.width, h = c.height, ctx = c.getContext('2d');
+  const img = ctx.getImageData(0,0,w,h).data;
+  let xMin=w, xMax=0, yMin=h, yMax=0;
+  for (let y=0; y<h; y++){
+    for (let x=0; x<w; x++){
+      const i = (y*w + x)*4;
+      if (img[i]+img[i+1]+img[i+2] < 755) {
+        xMin = Math.min(xMin, x);
+        xMax = Math.max(xMax, x);
+        yMin = Math.min(yMin, y);
+        yMax = Math.max(yMax, y);
+      }
+    }
   }
-  if(xMax<=xMin||yMax<=yMin) return c;
-  const cw=xMax-xMin+1,ch=yMax-yMin+1,oc=document.createElement('canvas');
-  oc.width=cw; oc.height=ch;
-  oc.getContext('2d').drawImage(c,xMin,yMin,cw,ch,0,0,cw,ch);
+  if (xMax<=xMin || yMax<=yMin) return c;
+  const cw = xMax-xMin+1, ch = yMax-yMin+1;
+  const oc = document.createElement('canvas');
+  oc.width = cw; oc.height = ch;
+  oc.getContext('2d').drawImage(c, xMin,yMin, cw,ch, 0,0,cw,ch);
   return oc;
 }
 
-// 4) carrusel
+// 5) Carrusel de miniaturas
 function renderCarousel() {
-  carousel.innerHTML='';
-  pages.forEach(c=>{
-    const t=document.createElement('canvas');
-    t.width=80; t.height=80*(c.height/c.width);
-    t.getContext('2d').drawImage(c,0,0,t.width,t.height);
-    carousel.appendChild(t);
+  carousel.innerHTML = '';
+  pages.forEach(c => {
+    const thumb = document.createElement('canvas');
+    thumb.width  = 80;
+    thumb.height = 80 * (c.height / c.width);
+    thumb.getContext('2d').drawImage(c, 0, 0, thumb.width, thumb.height);
+    carousel.appendChild(thumb);
   });
 }
 
-// 5) Capturar
-btnCapture.onclick = async ()=>{
-  // preview ya arrancó en onOpenCvReady
-  // tomar snapshot
-  canvas.hidden=true;
-  canvas.width=video.videoWidth; canvas.height=video.videoHeight;
-  canvas.getContext('2d').drawImage(video,0,0);
+// 6) Capturar documento
+btnCapture.addEventListener('click', async () => {
+  // congelar preview
+  canvas.hidden = true;
+  canvas.width  = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+
+  // detener cámara
+  stream.getTracks().forEach(t => t.stop());
+  video.hidden = true;
 
   // recortar + trim
-  let c=await cropDocument(canvas);
-  c=autoTrimCanvas(c);
+  let cropped = await cropDocument(canvas);
+  cropped = autoTrimCanvas(cropped);
 
-  // mostrar
-  canvas.hidden=false;
-  canvas.width=c.width; canvas.height=c.height;
-  canvas.getContext('2d').drawImage(c,0,0);
+  // mostrar en canvas
+  canvas.hidden = false;
+  canvas.width  = cropped.width;
+  canvas.height = cropped.height;
+  canvas.getContext('2d').drawImage(cropped, 0, 0);
 
-  // guardar página
-  pages.push(c); renderCarousel();
+  // guardar página y actualizar carrusel
+  pages.push(cropped);
+  renderCarousel();
 
-  // habilitar controles
-  [btnIMG,btnPDF,btnBW,btnContrast,btnOCR,btnMerge]
-    .forEach(b=>b.disabled=false);
-};
-
-// 6) Blanco y Negro
-btnBW.addEventListener('click',()=>{
-  const ctx = canvas.getContext('2d'), img=ctx.getImageData(0,0,canvas.width,canvas.height);
-  for(let i=0;i<img.data.length;i+=4){
-    const avg=(img.data[i]+img.data[i+1]+img.data[i+2])/3;
-    img.data[i]=img.data[i+1]=img.data[i+2]=avg;
-  }
-  ctx.putImageData(img,0,0);
+  // habilitar export/filtros
+  [btnIMG, btnPDF, btnBW, btnContrast, btnOCR, btnMerge]
+    .forEach(b=>b.disabled = false);
 });
 
-// 7) Contraste
-btnContrast.addEventListener('click',()=>{
-  const ctx=canvas.getContext('2d'), img=ctx.getImageData(0,0,canvas.width,canvas.height);
-  const factor=(259*(30+255))/(255*(259-30));
-  for(let i=0;i<img.data.length;i+=4){
+// 7) Blanco y Negro
+btnBW.addEventListener('click', () => {
+  const ctx = canvas.getContext('2d'), img = ctx.getImageData(0,0,canvas.width,canvas.height);
+  for (let i=0; i<img.data.length; i+=4) {
+    const avg = (img.data[i]+img.data[i+1]+img.data[i+2])/3;
+    img.data[i]=img.data[i+1]=img.data[i+2]=avg;
+  }
+  ctx.putImageData(img, 0, 0);
+});
+
+// 8) Contraste
+btnContrast.addEventListener('click', () => {
+  const ctx = canvas.getContext('2d'), img = ctx.getImageData(0,0,canvas.width,canvas.height);
+  const factor = (259*(30+255))/(255*(259-30));
+  for (let i=0; i<img.data.length; i+=4) {
     img.data[i]   = factor*(img.data[i]-128)+128;
     img.data[i+1] = factor*(img.data[i+1]-128)+128;
     img.data[i+2] = factor*(img.data[i+2]-128)+128;
   }
-  ctx.putImageData(img,0,0);
+  ctx.putImageData(img, 0, 0);
 });
 
-// 8) OCR
-btnOCR.addEventListener('click',async()=>{
-  btnOCR.textContent='⏳ Procesando...';
-  const { data:{ text } } = await Tesseract.recognize(canvas.toDataURL(),'spa+eng');
-  ocrResult.textContent=text;
-  btnOCR.textContent='🔎 OCR';
+// 9) OCR
+btnOCR.addEventListener('click', async () => {
+  btnOCR.textContent = '⏳ Procesando...';
+  const { data:{ text } } = await Tesseract.recognize(canvas.toDataURL(), 'spa+eng');
+  ocrResult.textContent = text;
+  btnOCR.textContent = '🔎 OCR';
 });
 
-// 9) Exportar JPG
-btnIMG.addEventListener('click',()=>{
-  const link=document.createElement('a');
-  link.href=canvas.toDataURL('image/jpeg',0.9);
-  link.download='scan.jpg';
+// 10) Exportar JPG
+btnIMG.addEventListener('click', () => {
+  const link = document.createElement('a');
+  link.href      = canvas.toDataURL('image/jpeg', 0.9);
+  link.download = 'scan.jpg';
   link.click();
 });
 
-// 10) Exportar PDF único
-btnPDF.addEventListener('click',()=>{
-  const { jsPDF }=window.jspdf;
-  const pdf=new jsPDF({unit:'px',format:[canvas.width,canvas.height]});
-  pdf.addImage(canvas,'JPEG',0,0,canvas.width,canvas.height);
+// 11) Exportar PDF (convertir px→mm para que encaje)
+btnPDF.addEventListener('click', () => {
+  const pxToMm = px => px * 0.264583;
+  const imgData = canvas.toDataURL('image/jpeg', 1.0);
+  const wMm = pxToMm(canvas.width);
+  const hMm = pxToMm(canvas.height);
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({
+    orientation: wMm > hMm ? 'landscape' : 'portrait',
+    unit: 'mm',
+    format: [wMm, hMm]
+  });
+  pdf.addImage(imgData, 'JPEG', 0, 0, wMm, hMm);
   pdf.save('scan.pdf');
 });
 
-// 11) Merge PDF múltiple
-btnMerge.addEventListener('click',()=>{
-  const { jsPDF }=window.jspdf;
-  const pdf=new jsPDF();
-  pages.forEach((c,i)=>{
-    if(i>0) pdf.addPage();
-    pdf.addImage(c,'JPEG',0,0,pdf.internal.pageSize.getWidth(),pdf.internal.pageSize.getHeight());
+// 12) Merge PDF de todas las páginas
+btnMerge.addEventListener('click', () => {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
+  pages.forEach((c,i) => {
+    if (i>0) pdf.addPage();
+    pdf.addImage(c, 'JPEG', 0, 0,
+      pdf.internal.pageSize.getWidth(),
+      pdf.internal.pageSize.getHeight()
+    );
   });
   pdf.save('multi-page.pdf');
 });
+
