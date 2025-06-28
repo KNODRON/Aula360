@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DocScan Móvil</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>📄 Scanner de Documentos</h1>
+    <div class="lang-toggle">
+      <button id="btn-es"><img src="icons/cl.png" alt="ES" /></button>
+      <button id="btn-en"><img src="icons/uk.png" alt="EN" /></button>
+    </div>
+  </header>
+
+  <main>
+    <video id="preview" autoplay playsinline></video>
+    <canvas id="canvas" hidden></canvas>
+    <div class="controls">
+      <button id="btn-capture">📸 Capturar</button>
+      <button id="btn-export-pdf" disabled>📄 Exportar PDF</button>
+      <button id="btn-export-img" disabled>🖼️ Exportar JPG</button>
+    </div>
+  </main>
+
+  <footer>
+    <p class="legal">© 2025 Tu Nombre. Derechos reservados.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
