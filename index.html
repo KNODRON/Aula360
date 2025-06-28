@@ -1,106 +1,185 @@
+/* index.html */
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0ea5e9" />
-
-  <title>DocScan Móvil</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
-
-  <link rel="stylesheet" href="styles.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Escáner de Documentos</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1 data-i18n="title">📄 Scanner de Documentos</h1>
-    <div class="lang-toggle">
-      <button id="btn-es"><img src="icons/cl.png" alt="Español" /></button>
-      <button id="btn-en"><img src="icons/uk.png" alt="English" /></button>
-      <button id="btn-install" style="display:none;">➕ Instalar App</button>
-    </div>
-  </header>
+  <h1>Escáner de Documentos</h1>
+  <video id="video" autoplay playsinline></video>
+  <button onclick="capturar()">📸 Capturar</button>
+  <button onclick="guardarImagen()">💾 Guardar Imagen</button>
+  <button onclick="aplicarFiltro('bw')">🌓 B/N</button>
+  <button onclick="aplicarFiltro('enhance')">✨ Mejorar</button>
+  <canvas id="canvas"></canvas>
 
-  <main>
-    <video id="preview" autoplay playsinline></video>
-    <canvas id="canvas" hidden></canvas>
-    <div class="controls">
-      <button id="btn-capture" data-i18n="capture" disabled>📸 Capturar</button>
-      <button id="btn-export-pdf" disabled data-i18n="exportPdf">📄 Exportar PDF</button>
-      <button id="btn-export-img" disabled data-i18n="exportImg">🖼️ Exportar JPG</button>
-    </div>
-  </main>
-
-  <footer>
-    <p class="legal" data-i18n="legal">© 2025 Tu Nombre. Derechos reservados.</p>
-  </footer>
-
-  <!-- PWA: Service Worker + Install Prompt + i18n -->
-  <script>
-    // 1) Service Worker registration
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log('Service Worker registrado'))
-        .catch(err => console.error('Error SW:', err));
-    }
-
-    // 2) Install prompt handler
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', e => {
-      e.preventDefault();
-      deferredPrompt = e;
-      const btn = document.getElementById('btn-install');
-      btn.style.display = 'inline-block';
-      btn.onclick = () => {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => deferredPrompt = null);
-      };
-    });
-
-    // 3) Simple i18n
-    const translations = {
-      es: {
-        title: '📄 Scanner de Documentos',
-        capture: '📸 Capturar',
-        exportPdf: '📄 Exportar PDF',
-        exportImg: '🖼️ Exportar JPG',
-        legal: '© 2025 Tu Nombre. Derechos reservados.'
-      },
-      en: {
-        title: '📄 Document Scanner',
-        capture: '📸 Capture',
-        exportPdf: '📄 Export PDF',
-        exportImg: '🖼️ Export JPG',
-        legal: '© 2025 Your Name. All rights reserved.'
-      }
-    };
-    function setLanguage(lang) {
-      document.documentElement.lang = lang;
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        el.textContent = translations[lang][key];
-      });
-    }
-    document.getElementById('btn-es').onclick = () => setLanguage('es');
-    document.getElementById('btn-en').onclick = () => setLanguage('en');
-    setLanguage('es');
-  </script>
-
-  <!-- OpenCV.js -->
-  <script async
-    src="https://docs.opencv.org/4.x/opencv.js"
-    onload="onOpenCvReady();">
-  </script>
-  <script>
-    function onOpenCvReady() {
-      console.log('OpenCV.js cargado');
-      document.getElementById('btn-capture').disabled = false;
-    }
-  </script>
-
-  <!-- App logic: cámara, recorte y export -->
+  <script async src="https://docs.opencv.org/4.x/opencv.js" onload="cv['onRuntimeInitialized']=inicializarOpenCV;"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
+
+/* style.css */
+body {
+  text-align: center;
+  font-family: sans-serif;
+  background-color: #f5f5f5;
+  margin: 0;
+  padding: 0;
+}
+
+video, canvas {
+  width: 90%;
+  max-width: 400px;
+  margin: 10px auto;
+  display: block;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  margin: 5px;
+  cursor: pointer;
+}
+
+/* manifest.json */
+{
+  "short_name": "DocScan",
+  "name": "Escáner de Documentos Móvil",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
+
+/* service-worker.js */
+self.addEventListener('install', e => self.skipWaiting());
+self.addEventListener('activate', e => self.clients.claim());
+self.addEventListener('fetch', e => {
+  e.respondWith(
+    caches.match(e.request).then(r => r || fetch(e.request))
+  );
+});
+
+/* app.js */
+let video = document.getElementById("video");
+let canvas = document.getElementById("canvas");
+let ctx = canvas.getContext("2d");
+let streaming = false;
+
+function inicializarOpenCV() {
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+      video.srcObject = stream;
+      video.play();
+    });
+
+  video.addEventListener("canplay", () => {
+    if (!streaming) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      streaming = true;
+    }
+  });
+}
+
+function capturar() {
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  let src = cv.imread(canvas);
+  let dst = new cv.Mat();
+  let gray = new cv.Mat();
+  let blurred = new cv.Mat();
+  let edges = new cv.Mat();
+
+  cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+  cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0);
+  cv.Canny(blurred, edges, 75, 200);
+
+  let contours = new cv.MatVector();
+  let hierarchy = new cv.Mat();
+  cv.findContours(edges, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
+
+  let biggest = null;
+  let maxArea = 0;
+  for (let i = 0; i < contours.size(); i++) {
+    let cnt = contours.get(i);
+    let peri = cv.arcLength(cnt, true);
+    let approx = new cv.Mat();
+    cv.approxPolyDP(cnt, approx, 0.02 * peri, true);
+
+    if (approx.rows === 4) {
+      let area = cv.contourArea(cnt);
+      if (area > maxArea) {
+        maxArea = area;
+        biggest = approx;
+      }
+    }
+  }
+
+  if (biggest) {
+    let pts1 = cv.matFromArray(4, 1, cv.CV_32FC2, [
+      biggest.data32F[0], biggest.data32F[1],
+      biggest.data32F[2], biggest.data32F[3],
+      biggest.data32F[4], biggest.data32F[5],
+      biggest.data32F[6], biggest.data32F[7],
+    ]);
+
+    let width = canvas.width;
+    let height = canvas.height;
+    let pts2 = cv.matFromArray(4, 1, cv.CV_32FC2, [
+      0, 0,
+      width, 0,
+      width, height,
+      0, height
+    ]);
+
+    let M = cv.getPerspectiveTransform(pts1, pts2);
+    cv.warpPerspective(src, dst, M, new cv.Size(width, height));
+    cv.imshow(canvas, dst);
+
+    pts1.delete(); pts2.delete(); M.delete();
+  }
+
+  src.delete(); dst.delete(); gray.delete(); blurred.delete();
+  edges.delete(); contours.delete(); hierarchy.delete();
+}
+
+function guardarImagen() {
+  let enlace = document.createElement('a');
+  enlace.download = "escaneo.png";
+  enlace.href = canvas.toDataURL();
+  enlace.click();
+}
+
+function aplicarFiltro(tipo) {
+  let src = cv.imread(canvas);
+  let dst = new cv.Mat();
+  if (tipo === 'bw') {
+    cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
+    cv.cvtColor(dst, dst, cv.COLOR_GRAY2RGBA);
+  } else if (tipo === 'enhance') {
+    cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
+    cv.equalizeHist(dst, dst);
+    cv.cvtColor(dst, dst, cv.COLOR_GRAY2RGBA);
+  }
+  cv.imshow(canvas, dst);
+  src.delete(); dst.delete();
+}
+
+window.guardarPDF = async function() {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
+  const imgData = canvas.toDataURL("image/png");
+  pdf.addImage(imgData, 'PNG', 10, 10, 180, 160);
+  pdf.save("escaneo.pdf");
+};
