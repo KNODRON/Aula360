@@ -11,20 +11,16 @@
   <link rel="apple-touch-icon" href="icon-192.png" />
 
   <link rel="stylesheet" href="styles.css" />
-  <!-- jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <!-- OpenCV.js -->
   <script async src="https://docs.opencv.org/4.x/opencv.js" onload="onOpenCvReady()"></script>
-  <!-- Tesseract.js -->
   <script src="https://unpkg.com/tesseract.js@v4.0.2/dist/tesseract.min.js"></script>
 </head>
-
 <body>
   <header>
     <h1 data-i18n="title">📄 Scanner de Documentos</h1>
     <div class="lang-toggle">
-      <button id="btn-es"><img src="icons/cl.png" alt="Español" /></button>
-      <button id="btn-en"><img src="icons/uk.png" alt="English" /></button>
+      <button id="btn-es"><img src="./icons/cl.png" alt="Español" /></button>
+      <button id="btn-en"><img src="./icons/uk.png" alt="English" /></button>
       <button id="btn-install" style="display:none;">➕ Instalar App</button>
     </div>
   </header>
@@ -35,8 +31,8 @@
 
     <div class="controls">
       <button id="btn-capture" disabled data-i18n="capture">📸 Capturar</button>
-      <button id="btn-export-pdf" disabled data-i18n="exportPdf">📄 Exportar PDF</button>
       <button id="btn-export-img" disabled data-i18n="exportImg">🖼️ Exportar JPG</button>
+      <button id="btn-export-pdf" disabled data-i18n="exportPdf">📄 Exportar PDF</button>
       <button id="btn-bw" disabled>B/N</button>
       <button id="btn-contrast" disabled>Contraste</button>
       <button id="btn-ocr" disabled>🔎 OCR</button>
@@ -44,15 +40,15 @@
     </div>
 
     <div id="page-carousel" class="carousel"></div>
-    <div id="ocr-result" style="white-space: pre-wrap; margin-top:1rem;"></div>
+    <div id="ocr-result"></div>
   </main>
 
   <footer>
-    <p class="legal" data-i18n="legal">© 2025 Tu Nombre. Derechos reservados.</p>
+    <p class="legal" data-i18n="legal">© 2025 KnoDron. Derechos reservados.</p>
   </footer>
 
   <script>
-    // PWA: Service Worker & install prompt
+    // PWA: SW + install prompt
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js');
     }
@@ -67,21 +63,21 @@
       };
     });
 
-    // i18n básico
+    // i18n
     const translations = {
       es: {
         title: '📄 Scanner de Documentos',
         capture: '📸 Capturar',
-        exportPdf: '📄 Exportar PDF',
         exportImg: '🖼️ Exportar JPG',
-        legal: '© 2025 Tu Nombre. Derechos reservados.'
+        exportPdf: '📄 Exportar PDF',
+        legal: '© 2025 KnoDron. Derechos reservados.'
       },
       en: {
         title: '📄 Document Scanner',
         capture: '📸 Capture',
-        exportPdf: '📄 Export PDF',
         exportImg: '🖼️ Export JPG',
-        legal: '© 2025 Your Name. All rights reserved.'
+        exportPdf: '📄 Export PDF',
+        legal: '© 2025 KnoDron. All rights reserved.'
       }
     };
     function setLanguage(lang) {
@@ -94,13 +90,22 @@
     document.getElementById('btn-en').onclick = () => setLanguage('en');
     setLanguage('es');
 
-    // Habilitar captura cuando OpenCV esté listo
-    function onOpenCvReady() {
+    // Cuando OpenCV.js carga, iniciamos cámara y habilitamos captura
+    async function onOpenCvReady() {
       document.getElementById('btn-capture').disabled = false;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }
+        });
+        const video = document.getElementById('preview');
+        video.srcObject = stream;
+        await video.play();
+      } catch (err) {
+        alert('Permiso de cámara denegado o no disponible:\n' + err.message);
+      }
     }
   </script>
 
-  <!-- Lógica principal -->
   <script src="app.js"></script>
 </body>
 </html>
