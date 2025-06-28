@@ -43,7 +43,7 @@ async function cropDocument(inputCanvas) {
   let bestArea    = 0;
   let approx4     = null;
 
-  // 4) Primer pase: busca cuadrilátero de proporción razonable
+  // 4) Primer pase: buscar cuadrilátero grande y de proporción razonable
   for (let i = 0; i < contours.size(); i++) {
     const cnt  = contours.get(i);
     const area = cv.contourArea(cnt);
@@ -53,7 +53,6 @@ async function cropDocument(inputCanvas) {
     const tmp  = new cv.Mat();
     cv.approxPolyDP(cnt, tmp, 0.02 * peri, true);
 
-    // Si tiene 4 vértices y buena proporción, lo guardamos
     if (tmp.rows === 4 && area > bestArea) {
       const r     = cv.boundingRect(tmp);
       const ratio = r.width / r.height;
@@ -69,7 +68,7 @@ async function cropDocument(inputCanvas) {
     cnt.delete();
   }
 
-  // 5) Fallback: si no encontramos cuadrilátero, toma el contorno más grande válido
+  // 5) Fallback: si no encontramos cuadrilátero, tomar el contorno más grande válido
   if (!bestCnt) {
     bestArea = 0;
     for (let i = 0; i < contours.size(); i++) {
