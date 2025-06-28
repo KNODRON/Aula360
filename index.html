@@ -37,28 +37,29 @@
     <p class="legal" data-i18n="legal">© 2025 Tu Nombre. Derechos reservados.</p>
   </footer>
 
-  <!-- PWA & i18n + Install Prompt -->
+  <!-- PWA: Service Worker + Install Prompt + i18n -->
   <script>
-    // Service Worker
+    // 1) Service Worker registration
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js')
         .then(() => console.log('Service Worker registrado'))
         .catch(err => console.error('Error SW:', err));
     }
 
-    // Install prompt
+    // 2) Install prompt handler
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', e => {
       e.preventDefault();
       deferredPrompt = e;
-      document.getElementById('btn-install').style.display = 'inline-block';
-      document.getElementById('btn-install').onclick = () => {
+      const btn = document.getElementById('btn-install');
+      btn.style.display = 'inline-block';
+      btn.onclick = () => {
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then(() => deferredPrompt = null);
       };
     });
 
-    // i18n
+    // 3) Simple i18n
     const translations = {
       es: {
         title: '📄 Scanner de Documentos',
@@ -78,7 +79,8 @@
     function setLanguage(lang) {
       document.documentElement.lang = lang;
       document.querySelectorAll('[data-i18n]').forEach(el => {
-        el.textContent = translations[lang][ el.dataset.i18n ];
+        const key = el.getAttribute('data-i18n');
+        el.textContent = translations[lang][key];
       });
     }
     document.getElementById('btn-es').onclick = () => setLanguage('es');
@@ -98,7 +100,7 @@
     }
   </script>
 
-  <!-- Tu lógica de cámara y recorte -->
+  <!-- App logic: cámara, recorte y export -->
   <script src="app.js"></script>
 </body>
 </html>
