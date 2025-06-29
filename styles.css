@@ -1,26 +1,21 @@
-<main> a flujo de bloque en vez de flex para que los botones se “acerquen” al canvas):
-
-css
-Copiar
-Editar
 /* styles.css */
 
-/* Layout general */
+/* Reset base */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+/* Body ya no usa flex completo */
 body {
   font-family: sans-serif;
-  background: #f5f5f5;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  background-color: #f5f5f5;
+  color: #333;
+  /* dejamos height automático para que la página crezca con el contenido */
 }
 
-/* Header y footer */
+/* Header y Footer */
 header,
 footer {
   background: #0ea5e9;
@@ -32,35 +27,35 @@ footer {
 }
 
 footer .legal {
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
+  font-size: 0.85rem;
 }
 
-/* Main usa flujo normal de bloque */
+/* Main en flujo normal de bloque */
 main {
-  flex: 1;
-  display: block;        /* ya no es flex */
+  display: block;
   padding: 1rem;
 }
 
-/* Video y canvas */
+/* Video y canvas en bloque, con margen pequeño */
 video,
 canvas {
   display: block;
   width: 90%;
   max-width: 400px;
-  margin: 0.5rem auto;   /* sólo 0.5rem arriba/abajo */
-  border: none;
+  margin: 0.5rem auto;
+  border: none;         /* sin borde */
   border-radius: 4px;
 }
 
-/* Controles justo después del canvas */
+/* Controles — justo después del canvas */
 .controls {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  margin-top: 0.5rem;
+  margin-top: 0.5rem;   /* muy cerca del canvas */
 }
 
 .controls button {
@@ -78,7 +73,7 @@ canvas {
   background: #e0f2fe;
 }
 
-button:disabled {
+.controls button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -102,7 +97,7 @@ button:disabled {
 #ocr-result {
   width: 90%;
   max-width: 400px;
-  margin: 0.5rem auto;
+  margin: 0.5rem auto 1rem auto;
   padding: 0.5rem;
   background: #fff;
   border: 1px solid #ddd;
@@ -112,13 +107,14 @@ button:disabled {
   white-space: pre-wrap;
 }
 
-/* Idioma (banderas) */
+/* Botones de idioma */
 .lang-toggle button {
   background: none;
   border: none;
   margin-left: 0.5rem;
   cursor: pointer;
 }
+
 .lang-toggle img {
   width: 24px;
   height: auto;
