@@ -14,7 +14,7 @@ const carousel     = document.getElementById('page-carousel');
 const ocrResult    = document.getElementById('ocr-result');
 
 let pages  = [];    // Array de canvases escaneados
-let stream = null; // MediaStream de la cámara
+let stream = null;  // MediaStream de la cámara
 
 // 2) Al cargar OpenCV, arrancamos la vista previa y habilitamos “Capturar”
 window.onOpenCvReady = async function() {
@@ -24,17 +24,16 @@ window.onOpenCvReady = async function() {
       video: { facingMode: 'environment' }
     });
     video.srcObject = stream;
+    video.style.display = 'block';
     await video.play();
   } catch (err) {
     alert('No se pudo acceder a la cámara:\n' + err.message);
   }
 };
 
-
 // 3) Recorte con OpenCV
 async function cropDocument(inputCanvas) {
   if (!window.cv || !cv.imread) return inputCanvas;
-
   const src      = cv.imread(inputCanvas);
   const gray     = new cv.Mat();
   const edges    = new cv.Mat();
@@ -48,7 +47,6 @@ async function cropDocument(inputCanvas) {
   cv.morphologyEx(edges, edges, cv.MORPH_CLOSE, Mkernel);
 
   cv.findContours(edges, contours, hier, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-
   let maxArea = 0, bestCnt = null;
   for (let i = 0; i < contours.size(); i++) {
     const cnt = contours.get(i);
@@ -82,6 +80,7 @@ async function cropDocument(inputCanvas) {
   out.height = h;
   cv.imshow(out, dst);
 
+  // limpiar
   src.delete(); gray.delete(); edges.delete();
   contours.delete(); hier.delete(); Mkernel.delete();
   bestCnt.delete(); srcPts.delete(); dstPts.delete(); M.delete(); dst.delete();
@@ -92,12 +91,12 @@ async function cropDocument(inputCanvas) {
 // 4) Quitar márgenes blancos sobrantes
 function autoTrimCanvas(c) {
   const w = c.width, h = c.height, ctx = c.getContext('2d');
-  const img = ctx.getImageData(0,0,w,h).data;
-  let xMin=w, xMax=0, yMin=h, yMax=0;
-  for (let y=0; y<h; y++){
-    for (let x=0; x<w; x++){
+  const data = ctx.getImageData(0,0,w,h).data;
+  let xMin = w, xMax = 0, yMin = h, yMax = 0;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
       const i = (y*w + x)*4;
-      if (img[i]+img[i+1]+img[i+2] < 755) {
+      if (data[i] + data[i+1] + data[i+2] < 765 - 10) {
         xMin = Math.min(xMin, x);
         xMax = Math.max(xMax, x);
         yMin = Math.min(yMin, y);
@@ -105,11 +104,11 @@ function autoTrimCanvas(c) {
       }
     }
   }
-  if (xMax<=xMin || yMax<=yMin) return c;
-  const cw = xMax-xMin+1, ch = yMax-yMin+1;
+  if (xMax <= xMin || yMax <= yMin) return c;
+  const cw = xMax - xMin + 1, ch = yMax - yMin + 1;
   const oc = document.createElement('canvas');
   oc.width = cw; oc.height = ch;
-  oc.getContext('2d').drawImage(c, xMin,yMin, cw,ch, 0,0,cw,ch);
+  oc.getContext('2d').drawImage(c, xMin, yMin, cw, ch, 0, 0, cw, ch);
   return oc;
 }
 
@@ -125,23 +124,29 @@ function renderCarousel() {
   });
 }
 
-// 6) Capturar documento
+// 6) Capturar documento y detener cámara
 btnCapture.addEventListener('click', async () => {
-  // congelar preview
+  // freeze-frame en canvas
   canvas.hidden = true;
   canvas.width  = video.videoWidth;
   canvas.height = video.videoHeight;
   canvas.getContext('2d').drawImage(video, 0, 0);
 
-  // detener cámara
-  stream.getTracks().forEach(t => t.stop());
-  video.hidden = true;
+  // detener todas las pistas de la cámara
+  if (stream) {
+    stream.getTracks().forEach(t => t.stop());
+    stream = null;
+  }
+  // ocultar el elemento de video
+  video.pause();
+  video.srcObject = null;
+  video.style.display = 'none';
 
   // recortar + trim
   let cropped = await cropDocument(canvas);
   cropped = autoTrimCanvas(cropped);
 
-  // mostrar en canvas
+  // mostrar el recorte
   canvas.hidden = false;
   canvas.width  = cropped.width;
   canvas.height = cropped.height;
@@ -151,29 +156,31 @@ btnCapture.addEventListener('click', async () => {
   pages.push(cropped);
   renderCarousel();
 
-  // habilitar export/filtros
+  // habilitar export y filtros
   [btnIMG, btnPDF, btnBW, btnContrast, btnOCR, btnMerge]
-    .forEach(b=>b.disabled = false);
+    .forEach(b => b.disabled = false);
 });
 
 // 7) Blanco y Negro
 btnBW.addEventListener('click', () => {
-  const ctx = canvas.getContext('2d'), img = ctx.getImageData(0,0,canvas.width,canvas.height);
-  for (let i=0; i<img.data.length; i+=4) {
-    const avg = (img.data[i]+img.data[i+1]+img.data[i+2])/3;
-    img.data[i]=img.data[i+1]=img.data[i+2]=avg;
+  const ctx = canvas.getContext('2d');
+  const img = ctx.getImageData(0,0,canvas.width,canvas.height);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const avg = (img.data[i] + img.data[i+1] + img.data[i+2]) / 3;
+    img.data[i] = img.data[i+1] = img.data[i+2] = avg;
   }
   ctx.putImageData(img, 0, 0);
 });
 
 // 8) Contraste
 btnContrast.addEventListener('click', () => {
-  const ctx = canvas.getContext('2d'), img = ctx.getImageData(0,0,canvas.width,canvas.height);
-  const factor = (259*(30+255))/(255*(259-30));
-  for (let i=0; i<img.data.length; i+=4) {
-    img.data[i]   = factor*(img.data[i]-128)+128;
-    img.data[i+1] = factor*(img.data[i+1]-128)+128;
-    img.data[i+2] = factor*(img.data[i+2]-128)+128;
+  const ctx = canvas.getContext('2d');
+  const img = ctx.getImageData(0,0,canvas.width,canvas.height);
+  const factor = (259 * (30 + 255)) / (255 * (259 - 30));
+  for (let i = 0; i < img.data.length; i += 4) {
+    img.data[i]   = factor * (img.data[i]   - 128) + 128;
+    img.data[i+1] = factor * (img.data[i+1] - 128) + 128;
+    img.data[i+2] = factor * (img.data[i+2] - 128) + 128;
   }
   ctx.putImageData(img, 0, 0);
 });
@@ -194,32 +201,31 @@ btnIMG.addEventListener('click', () => {
   link.click();
 });
 
-// 11) Exportar PDF (convertir px→mm para que encaje)
+// 11) Exportar PDF con tamaño ajustado
 btnPDF.addEventListener('click', () => {
   const pxToMm = px => px * 0.264583;
-  const imgData = canvas.toDataURL('image/jpeg', 1.0);
-  const wMm = pxToMm(canvas.width);
-  const hMm = pxToMm(canvas.height);
+  const dataURL = canvas.toDataURL('image/jpeg', 1.0);
+  const wMm = pxToMm(canvas.width), hMm = pxToMm(canvas.height);
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({
     orientation: wMm > hMm ? 'landscape' : 'portrait',
     unit: 'mm',
     format: [wMm, hMm]
   });
-  pdf.addImage(imgData, 'JPEG', 0, 0, wMm, hMm);
+  pdf.addImage(dataURL, 'JPEG', 0, 0, wMm, hMm);
   pdf.save('scan.pdf');
 });
 
 // 12) Merge PDF de todas las páginas
 btnMerge.addEventListener('click', () => {
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF();
+  const pdf       = new jsPDF();
   pages.forEach((c,i) => {
-    if (i>0) pdf.addPage();
-    pdf.addImage(c, 'JPEG', 0, 0,
-      pdf.internal.pageSize.getWidth(),
-      pdf.internal.pageSize.getHeight()
-    );
+    if (i > 0) pdf.addPage();
+    pdf.addImage(c, 'JPEG',
+                 0, 0,
+                 pdf.internal.pageSize.getWidth(),
+                 pdf.internal.pageSize.getHeight());
   });
   pdf.save('multi-page.pdf');
 });
