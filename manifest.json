@@ -1,6 +1,6 @@
 {
-  "short_name": "DocScan",
-  "name": "DocScan Móvil – Scanner de Documentos",
+  "short_name": "ScanOS9",
+  "name": "DocScan Móvil – Scanner de Cazadores",
   "description": "Escanea documentos con la cámara del móvil y exporta en PDF o JPG.",
   "lang": "es-ES",
   "start_url": "./index.html",
