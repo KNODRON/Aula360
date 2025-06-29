@@ -1,76 +1,76 @@
+<main> a flujo de bloque en vez de flex para que los botones se “acerquen” al canvas):
+
+css
+Copiar
+Editar
 /* styles.css */
 
-/* Layout principal */
-body {
+/* Layout general */
+* {
+  box-sizing: border-box;
   margin: 0;
+  padding: 0;
+}
+
+body {
   font-family: sans-serif;
+  background: #f5f5f5;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  /* Cambiado a min-height para evitar "forzar" todo a 100vh */
-  min-height: 100vh;
-  background-color: #f5f5f5;
 }
 
 /* Header y footer */
 header,
 footer {
-  padding: 0.5rem 1rem;
   background: #0ea5e9;
   color: #fff;
+  padding: 0.5rem 1rem;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
 }
 
 footer .legal {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0,0,0,0.5);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
 }
 
-/* Área de contenido */
+/* Main usa flujo normal de bloque */
 main {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  /* Cambiado de center a flex-start para subir todo hacia arriba */
-  justify-content: flex-start;
-  position: relative;
+  display: block;        /* ya no es flex */
   padding: 1rem;
-  overflow-y: auto;
 }
 
-/* Video y Canvas — sin bordes y con margen reducido */
+/* Video y canvas */
 video,
 canvas {
-  max-width: 100%;
+  display: block;
   width: 90%;
   max-width: 400px;
+  margin: 0.5rem auto;   /* sólo 0.5rem arriba/abajo */
   border: none;
   border-radius: 4px;
-  display: block;
-  /* margen más pequeño arriba/abajo */
-  margin: 0.5rem auto;
 }
 
-/* Controles de botones */
+/* Controles justo después del canvas */
 .controls {
-  /* margen superior reducido */
-  margin-top: 0.5rem;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  margin-top: 0.5rem;
 }
 
 .controls button {
   margin: 0.25rem;
   padding: 0.5rem 1rem;
   font-size: 1rem;
-  cursor: pointer;
   border: 1px solid #ccc;
   border-radius: 4px;
   background: #fff;
+  cursor: pointer;
   transition: background 0.2s;
 }
 
@@ -78,35 +78,18 @@ canvas {
   background: #e0f2fe;
 }
 
-/* Estado deshabilitado */
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-/* Toggle de idioma */
-.lang-toggle {
-  display: flex;
-  align-items: center;
-}
-
-.lang-toggle button {
-  background: none;
-  border: none;
-  margin-left: 0.5rem;
-  cursor: pointer;
-}
-
-.lang-toggle img {
-  width: 24px;
-  height: auto;
 }
 
 /* Carrusel de miniaturas */
 .carousel {
   display: flex;
   overflow-x: auto;
-  margin: 0.5rem 0;
+  margin: 0.5rem auto;
+  width: 90%;
+  max-width: 400px;
 }
 
 .carousel canvas {
@@ -115,16 +98,28 @@ button:disabled {
   border-radius: 4px;
 }
 
-/* Resultado de OCR */
+/* Resultado OCR */
 #ocr-result {
   width: 90%;
   max-width: 400px;
-  margin-top: 0.5rem;
-  background: #fff;
+  margin: 0.5rem auto;
   padding: 0.5rem;
-  border-radius: 4px;
+  background: #fff;
   border: 1px solid #ddd;
+  border-radius: 4px;
   font-size: 0.9rem;
   line-height: 1.4;
   white-space: pre-wrap;
+}
+
+/* Idioma (banderas) */
+.lang-toggle button {
+  background: none;
+  border: none;
+  margin-left: 0.5rem;
+  cursor: pointer;
+}
+.lang-toggle img {
+  width: 24px;
+  height: auto;
 }
