@@ -6,7 +6,8 @@ body {
   font-family: sans-serif;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  /* Cambiado a min-height para evitar "forzar" todo a 100vh */
+  min-height: 100vh;
   background-color: #f5f5f5;
 }
 
@@ -33,12 +34,14 @@ main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* Cambiado de center a flex-start para subir todo hacia arriba */
+  justify-content: flex-start;
   position: relative;
   padding: 1rem;
+  overflow-y: auto;
 }
 
-/* Video y Canvas — sin bordes */
+/* Video y Canvas — sin bordes y con margen reducido */
 video,
 canvas {
   max-width: 100%;
@@ -47,12 +50,14 @@ canvas {
   border: none;
   border-radius: 4px;
   display: block;
+  /* margen más pequeño arriba/abajo */
   margin: 0.5rem auto;
 }
 
 /* Controles de botones */
 .controls {
-  margin-top: 1rem;
+  /* margen superior reducido */
+  margin-top: 0.5rem;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -101,7 +106,7 @@ button:disabled {
 .carousel {
   display: flex;
   overflow-x: auto;
-  margin: 1rem 0;
+  margin: 0.5rem 0;
 }
 
 .carousel canvas {
@@ -114,7 +119,7 @@ button:disabled {
 #ocr-result {
   width: 90%;
   max-width: 400px;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
   background: #fff;
   padding: 0.5rem;
   border-radius: 4px;
