@@ -1,13 +1,13 @@
 /* styles.css */
 
-/* Reset base */
+/* 1. Reset base */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-/* Cuerpo */
+/* 2. Cuerpo */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f0f4f2;
@@ -15,7 +15,7 @@ body {
   line-height: 1.5;
 }
 
-/* Header y Footer – tema verde */
+/* 3. Header y Footer – tema verde */
 header,
 footer {
   background-color: #0f9d58;   /* verde vibrante */
@@ -33,11 +33,6 @@ header h1 {
   align-items: center;
 }
 
-header h1 svg,
-header h1 img {
-  margin-right: 0.5rem;
-}
-
 footer .legal {
   font-size: 0.85rem;
   background: rgba(255,255,255,0.2);
@@ -45,19 +40,14 @@ footer .legal {
   border-radius: 4px;
 }
 
-/* Main */
+/* 4. Main como bloque normal */
 main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  /* antes: justify-content: center; */
-  justify-content: flex-start;
-  padding: 1rem;
-  position: relative;
+  display: block;
+  padding: 1rem 0;
+  text-align: center;
 }
 
-/* Video y Canvas */
+/* 5. Video y Canvas */
 video,
 canvas {
   display: block;
@@ -72,15 +62,15 @@ canvas {
 #canvas {
   max-height: 60vh;
   width: auto;
-  display: block;
-  margin: 0.75rem auto;
 }
-/* Controles de botones */
+
+/* 6. Controles de botones */
 .controls {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  margin-top: 0.3rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .controls button {
@@ -110,12 +100,11 @@ canvas {
   box-shadow: none;
 }
 
-/* Carrusel de miniaturas */
+/* 7. Carrusel de miniaturas */
 .carousel {
   display: flex;
   overflow-x: auto;
-  margin-bottom: 1rem;
-  margin: 1rem auto;
+  margin: 0.5rem auto 1rem auto;  /* 0.5 arriba, 1 abajo */
   width: 90%;
   max-width: 400px;
   padding-bottom: 0.5rem;
@@ -127,21 +116,15 @@ canvas {
   box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
 
-/* Resultado OCR */
-#ocr-result {
-  width: 90%;
-  max-width: 400px;
-  margin: 1rem auto;
-  padding: 0.75rem;
-  background: #fff;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 0.9rem;
-  white-space: pre-wrap;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+/* 8. Oculta el carousel mientras no haya miniaturas */
+#page-carousel:empty {
+  display: none;
 }
 
-/* Toggle de idioma (banderas) */
+/* 9. B/N y exportaciones (botones ya estilizados arriba) */
+/*    No hay estilos extra aquí */
+
+/* 10. Toggle de idioma (si aún lo usas) */
 .lang-toggle {
   display: flex;
   align-items: center;
@@ -160,15 +143,6 @@ canvas {
 }
 
 .lang-toggle img {
-  width: 28px;
-  height: auto;
-}
-
-.lang-toggle img {
   width: 24px;
   height: auto;
-}
-/* Oculta el carousel mientras no haya miniaturas */
-#page-carousel:empty {
-  display: none;
 }
