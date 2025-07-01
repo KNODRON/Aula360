@@ -168,3 +168,7 @@ canvas {
   width: 24px;
   height: auto;
 }
+/* Oculta el carousel mientras no haya miniaturas */
+#page-carousel:empty {
+  display: none;
+}
