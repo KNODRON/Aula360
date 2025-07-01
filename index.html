@@ -4,25 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0ea5e9" />
-
   <title>ScanOS9 Móvil</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" href="icon-192.png" sizes="192x192" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script async src="https://docs.opencv.org/4.x/opencv.js" onload="onOpenCvReady()"></script>
-  <script src="https://unpkg.com/tesseract.js@v4.0.2/dist/tesseract.min.js"></script>
 </head>
 <body>
   <header>
-    <h1 data-i18n="title">📄 Scanner de Cazadores</h1>
-    <div class="lang-toggle">
-      <button id="btn-es"><img src="./cl.png" alt="Español"/></button>
-      <button id="btn-en"><img src="./uk.png" alt="English"/></button>
-      <button id="btn-install" style="display:none;">➕ Instalar App</button>
-    </div>
+    <h1>📄 Scanner de Cazadores</h1>
   </header>
 
   <main>
@@ -30,82 +22,20 @@
     <canvas id="canvas" hidden></canvas>
 
     <div class="controls">
-      <button id="btn-capture" disabled data-i18n="capture">📸 Capturar</button>
-      <button id="btn-export-img" disabled data-i18n="exportImg">🖼️ Exportar JPG</button>
-      <button id="btn-export-pdf" disabled data-i18n="exportPdf">📄 Exportar PDF</button>
+      <button id="btn-capture">📸 Capturar</button>
+      <button id="btn-export-img" disabled>🖼️ Exportar JPG</button>
+      <button id="btn-export-pdf" disabled>📄 Exportar PDF</button>
       <button id="btn-bw" disabled>B/N</button>
-      <button id="btn-contrast" disabled>Contraste</button>
-      <button id="btn-ocr" disabled>🔎 OCR</button>
-      <button id="btn-merge" disabled>📑 Merge PDF</button>
     </div>
 
     <div id="page-carousel" class="carousel"></div>
-    <div id="ocr-result"></div>
   </main>
 
   <footer>
-    <p class="legal" data-i18n="legal">© 2025 KnoDron. Derechos reservados.</p>
+    <p class="legal">© 2025 KnoDron. Derechos reservados.</p>
   </footer>
-
-  <script>
-    // PWA: SW + install prompt
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
-    }
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', e => {
-      e.preventDefault();
-      deferredPrompt = e;
-      document.getElementById('btn-install').style.display = 'inline-block';
-      document.getElementById('btn-install').onclick = () => {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => deferredPrompt = null);
-      };
-    });
-
-    // i18n
-    const translations = {
-      es: {
-        title: '📄 Scanner de Cazadores',
-        capture: '📸 Capturar',
-        exportImg: '🖼️ Exportar JPG',
-        exportPdf: '📄 Exportar PDF',
-        legal: '© 2025 KnoDron. Derechos reservados.'
-      },
-      en: {
-        title: '📄 Hunter Scanner',
-        capture: '📸 Capture',
-        exportImg: '🖼️ Export JPG',
-        exportPdf: '📄 Export PDF',
-        legal: '© 2025 KnoDron. All rights reserved.'
-      }
-    };
-    function setLanguage(lang) {
-      document.documentElement.lang = lang;
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        el.textContent = translations[lang][el.dataset.i18n];
-      });
-    }
-    document.getElementById('btn-es').onclick = () => setLanguage('es');
-    document.getElementById('btn-en').onclick = () => setLanguage('en');
-    setLanguage('es');
-
-    // Cuando OpenCV.js carga, iniciamos cámara y habilitamos captura
-    async function onOpenCvReady() {
-      document.getElementById('btn-capture').disabled = false;
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' }
-        });
-        const video = document.getElementById('preview');
-        video.srcObject = stream;
-        await video.play();
-      } catch (err) {
-        alert('Permiso de cámara denegado o no disponible:\n' + err.message);
-      }
-    }
-  </script>
 
   <script src="app.js"></script>
 </body>
 </html>
+
