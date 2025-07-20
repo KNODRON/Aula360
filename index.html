@@ -1,39 +1,400 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0ea5e9" />
-  <title>ScanOS9 Móvil</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="icon-192.png" sizes="192x192" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script async src="https://docs.opencv.org/4.x/opencv.js" onload="onOpenCvReady()"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentinela Escolar</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+        }
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background-color: #ffffff;
+            border-radius: 0.75rem; /* Rounded corners */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .section-header {
+            background-color: #2c5282; /* Darker blue for headers */
+            color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 1rem;
+        }
+        .input-field, .select-field, .textarea-field {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid #cbd5e0; /* Light gray border */
+            border-radius: 0.5rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-field:focus, .select-field:focus, .textarea-field:focus {
+            border-color: #4299e1; /* Blue on focus */
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn-primary {
+            background-color: #4299e1; /* Blue */
+            color: #ffffff;
+        }
+        .btn-primary:hover {
+            background-color: #3182ce; /* Darker blue on hover */
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background-color: #edf2f7; /* Light gray */
+            color: #2d3748; /* Dark text */
+            border: 1px solid #cbd5e0;
+        }
+        .btn-secondary:hover {
+            background-color: #e2e8f0;
+            transform: translateY(-1px);
+        }
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            text-align: center;
+            display: none; /* Hidden by default */
+        }
+        .message-box button {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background-color: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+        .report-card {
+            background-color: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
-  <header>
-    <h1>📄 Scanner de Cazadores</h1>
-  </header>
+    <div class="container">
+        <!-- Header -->
+        <header class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Sentinela Escolar</h1>
+            <!-- Placeholder for a school-related logo if available -->
+            <img src="https://placehold.co/60x60/2c5282/ffffff?text=APP" alt="Logo Sentinela" class="logo">
+        </header>
 
-  <main>
-    <video id="preview" autoplay playsinline></video>
-    <canvas id="canvas" hidden></canvas>
-    
-    <div class="controls">
-      <button id="btn-capture">📸 Capturar</button>
-      <button id="btn-export-img" disabled>🖼️ Exportar JPG</button>
-      <button id="btn-export-pdf" disabled>📄 Exportar PDF</button>
-      <button id="btn-bw" disabled>B/N</button>
+        <!-- Message Box for Alerts -->
+        <div id="messageBox" class="message-box">
+            <p id="messageBoxText"></p>
+            <button onclick="closeMessageBox()">OK</button>
+        </div>
+
+        <!-- Role Selection -->
+        <div class="section-header">Selección de Rol</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <button class="btn btn-secondary" onclick="selectRole('profesor')">Profesor / Inspector</button>
+            <button class="btn btn-secondary" onclick="selectRole('direccion')">Dirección / DAEM</button>
+            <button class="btn btn-secondary" onclick="selectRole('seguridad')">Seguridad Interna</button>
+            <button class="btn btn-secondary" onclick="selectRole('estudiante')">Estudiante (Anónimo)</button>
+        </div>
+
+        <!-- Content Area based on Role -->
+        <div id="contentArea">
+            <p class="text-center text-gray-600">Por favor, seleccione su rol para continuar.</p>
+        </div>
     </div>
-  </main>
 
-  <footer>
-    <p class="legal">© 2025 KnoDron. Derechos reservados.</p>
-  </footer>
+    <script>
+        let currentRole = null;
+        let reports = []; // In-memory storage for reports
+        let novedades = []; // In-memory storage for novedades
 
-  <script src="app.js"></script>
+        // Message Box functions
+        function showMessageBox(message) {
+            const messageBox = document.getElementById('messageBox');
+            const messageBoxText = document.getElementById('messageBoxText');
+            messageBoxText.textContent = message;
+            messageBox.style.display = 'block';
+        }
+
+        function closeMessageBox() {
+            document.getElementById('messageBox').style.display = 'none';
+        }
+
+        function selectRole(role) {
+            currentRole = role;
+            const contentArea = document.getElementById('contentArea');
+            contentArea.innerHTML = ''; // Clear previous content
+
+            switch (role) {
+                case 'profesor':
+                    contentArea.innerHTML = `
+                        <div class="section-header">Profesor / Inspector</div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Reportar Incidente</h3>
+                        <form id="incidentReportForm" class="mb-8">
+                            <div class="input-group">
+                                <label for="incidentType" class="block text-gray-700 text-sm font-medium mb-1">Tipo de Incidente:</label>
+                                <select id="incidentType" class="select-field" required>
+                                    <option value="">Seleccione tipo</option>
+                                    <option value="Pelea">Pelea</option>
+                                    <option value="Robo">Robo</option>
+                                    <option value="Ingreso de terceros">Ingreso de terceros</option>
+                                    <option value="Amenaza">Amenaza</option>
+                                    <option value="Armas">Armas</option>
+                                    <option value="Drogas">Drogas</option>
+                                    <option value="Otro">Otro</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="incidentDescription" class="block text-gray-700 text-sm font-medium mb-1">Descripción:</label>
+                                <textarea id="incidentDescription" class="textarea-field" rows="4" placeholder="Detalle el incidente..." required></textarea>
+                            </div>
+                            <div class="input-group">
+                                <label for="reporterName" class="block text-gray-700 text-sm font-medium mb-1">Su Nombre (opcional):</label>
+                                <input type="text" id="reporterName" class="input-field" placeholder="Ej: Juan Pérez">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-full">Enviar Reporte</button>
+                        </form>
+
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3 mt-8">Bitácora de Novedades</h3>
+                        <form id="novedadesForm" class="mb-8">
+                            <div class="input-group">
+                                <label for="novedadDescription" class="block text-gray-700 text-sm font-medium mb-1">Novedad:</label>
+                                <textarea id="novedadDescription" class="textarea-field" rows="3" placeholder="Ej: Baño roto en 2do piso, puerta de sala 5 mala..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-full">Registrar Novedad</button>
+                        </form>
+                    `;
+                    document.getElementById('incidentReportForm').addEventListener('submit', handleIncidentReport);
+                    document.getElementById('novedadesForm').addEventListener('submit', handleNovedadReport);
+                    break;
+                case 'direccion':
+                    contentArea.innerHTML = `
+                        <div class="section-header">Dirección / DAEM</div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Reportes Recibidos</h3>
+                        <div id="reportsList" class="space-y-4">
+                            <!-- Reports will be loaded here -->
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3 mt-8">Novedades Registradas</h3>
+                        <div id="novedadesList" class="space-y-4">
+                            <!-- Novedades will be loaded here -->
+                        </div>
+                    `;
+                    renderReports();
+                    renderNovedades();
+                    break;
+                case 'seguridad':
+                    contentArea.innerHTML = `
+                        <div class="section-header">Seguridad Interna</div>
+                        <p class="text-gray-600 mb-4">Funcionalidades para seguridad interna (ej: registro de rondas, marcaje de zonas inseguras) se implementarán aquí.</p>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Reportar Incidente</h3>
+                        <form id="incidentReportForm" class="mb-8">
+                            <div class="input-group">
+                                <label for="incidentType" class="block text-gray-700 text-sm font-medium mb-1">Tipo de Incidente:</label>
+                                <select id="incidentType" class="select-field" required>
+                                    <option value="">Seleccione tipo</option>
+                                    <option value="Pelea">Pelea</option>
+                                    <option value="Robo">Robo</option>
+                                    <option value="Ingreso de terceros">Ingreso de terceros</option>
+                                    <option value="Amenaza">Amenaza</option>
+                                    <option value="Armas">Armas</option>
+                                    <option value="Drogas">Drogas</option>
+                                    <option value="Otro">Otro</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="incidentDescription" class="block text-gray-700 text-sm font-medium mb-1">Descripción:</label>
+                                <textarea id="incidentDescription" class="textarea-field" rows="4" placeholder="Detalle el incidente..." required></textarea>
+                            </div>
+                            <div class="input-group">
+                                <label for="reporterName" class="block text-gray-700 text-sm font-medium mb-1">Su Nombre (opcional):</label>
+                                <input type="text" id="reporterName" class="input-field" placeholder="Ej: Juan Pérez">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-full">Enviar Reporte</button>
+                        </form>
+                    `;
+                    document.getElementById('incidentReportForm').addEventListener('submit', handleIncidentReport);
+                    break;
+                case 'estudiante':
+                    contentArea.innerHTML = `
+                        <div class="section-header">Estudiante (Denuncia Anónima)</div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Realizar Denuncia Anónima</h3>
+                        <form id="anonymousReportForm" class="mb-8">
+                            <div class="input-group">
+                                <label for="anonymousReportType" class="block text-gray-700 text-sm font-medium mb-1">Tipo de Denuncia:</label>
+                                <select id="anonymousReportType" class="select-field" required>
+                                    <option value="">Seleccione tipo</option>
+                                    <option value="Rumores">Rumores</option>
+                                    <option value="Amenazas">Amenazas</option>
+                                    <option value="Armas">Armas</option>
+                                    <option value="Drogas">Drogas</option>
+                                    <option value="Otros Riesgos">Otros Riesgos</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="anonymousReportDescription" class="block text-gray-700 text-sm font-medium mb-1">Detalle (opcional):</label>
+                                <textarea id="anonymousReportDescription" class="textarea-field" rows="4" placeholder="Proporcione detalles de forma anónima..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-full">Enviar Denuncia Anónima</button>
+                        </form>
+                    `;
+                    document.getElementById('anonymousReportForm').addEventListener('submit', handleAnonymousReport);
+                    break;
+                default:
+                    contentArea.innerHTML = '<p class="text-center text-gray-600">Por favor, seleccione su rol para continuar.</p>';
+            }
+        }
+
+        function handleIncidentReport(event) {
+            event.preventDefault();
+            const incidentType = document.getElementById('incidentType').value;
+            const incidentDescription = document.getElementById('incidentDescription').value;
+            const reporterName = document.getElementById('reporterName').value || 'Anónimo';
+
+            if (!incidentType || !incidentDescription) {
+                showMessageBox('Por favor, complete el tipo y la descripción del incidente.');
+                return;
+            }
+
+            const newReport = {
+                id: Date.now(),
+                type: incidentType,
+                description: incidentDescription,
+                reporter: reporterName,
+                date: new Date().toLocaleString('es-CL'),
+                status: 'Pendiente',
+                role: 'Profesor/Inspector'
+            };
+            reports.push(newReport);
+            showMessageBox('¡Reporte de incidente enviado exitosamente!');
+            event.target.reset(); // Clear form
+            console.log('Incident Reports:', reports);
+        }
+
+        function handleNovedadReport(event) {
+            event.preventDefault();
+            const novedadDescription = document.getElementById('novedadDescription').value;
+
+            if (!novedadDescription) {
+                showMessageBox('Por favor, ingrese la descripción de la novedad.');
+                return;
+            }
+
+            const newNovedad = {
+                id: Date.now(),
+                description: novedadDescription,
+                date: new Date().toLocaleString('es-CL'),
+                role: 'Profesor/Inspector'
+            };
+            novedades.push(newNovedad);
+            showMessageBox('¡Novedad registrada exitosamente!');
+            event.target.reset(); // Clear form
+            console.log('Novedades:', novedades);
+        }
+
+        function handleAnonymousReport(event) {
+            event.preventDefault();
+            const anonymousReportType = document.getElementById('anonymousReportType').value;
+            const anonymousReportDescription = document.getElementById('anonymousReportDescription').value;
+
+            if (!anonymousReportType) {
+                showMessageBox('Por favor, seleccione el tipo de denuncia.');
+                return;
+            }
+
+            const newAnonymousReport = {
+                id: Date.now(),
+                type: anonymousReportType,
+                description: anonymousReportDescription || 'Sin descripción adicional',
+                reporter: 'Anónimo',
+                date: new Date().toLocaleString('es-CL'),
+                status: 'Alerta Preventiva',
+                role: 'Estudiante'
+            };
+            reports.push(newAnonymousReport);
+            showMessageBox('¡Denuncia anónima enviada exitosamente!');
+            event.target.reset(); // Clear form
+            console.log('Anonymous Reports:', reports);
+        }
+
+        function renderReports() {
+            const reportsList = document.getElementById('reportsList');
+            reportsList.innerHTML = '';
+            if (reports.length === 0) {
+                reportsList.innerHTML = '<p class="text-gray-500">No hay reportes para mostrar.</p>';
+                return;
+            }
+            reports.forEach(report => {
+                const reportCard = document.createElement('div');
+                reportCard.className = 'report-card';
+                reportCard.innerHTML = `
+                    <p class="font-semibold">Tipo: ${report.type}</p>
+                    <p class="text-sm text-gray-700">Descripción: ${report.description}</p>
+                    <p class="text-xs text-gray-500">Reportado por: ${report.reporter} (${report.role}) el ${report.date}</p>
+                    <p class="text-sm font-medium ${report.status === 'Pendiente' ? 'text-red-600' : 'text-green-600'}">Estado: ${report.status}</p>
+                `;
+                reportsList.appendChild(reportCard);
+            });
+        }
+
+        function renderNovedades() {
+            const novedadesList = document.getElementById('novedadesList');
+            novedadesList.innerHTML = '';
+            if (novedades.length === 0) {
+                novedadesList.innerHTML = '<p class="text-gray-500">No hay novedades registradas.</p>';
+                return;
+            }
+            novedades.forEach(novedad => {
+                const novedadCard = document.createElement('div');
+                novedadCard.className = 'report-card'; // Reusing report-card style
+                novedadCard.innerHTML = `
+                    <p class="font-semibold">Novedad:</p>
+                    <p class="text-sm text-gray-700">${novedad.description}</p>
+                    <p class="text-xs text-gray-500">Registrado el ${novedad.date}</p>
+                `;
+                novedadesList.appendChild(novedadCard);
+            });
+        }
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker-sentinela.js')
+                    .then(registration => {
+                        console.log('Service Worker de Sentinela Escolar registrado con éxito:', registration);
+                    })
+                    .catch(error => {
+                        console.log('Fallo el registro del Service Worker de Sentinela Escolar:', error);
+                    });
+            });
+        }
+    </script>
 </body>
 </html>
-
