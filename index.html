@@ -99,7 +99,7 @@
         }
     </style>
     <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest-sentinela.json">
+    <link rel="manifest" href="./manifest-sentinela.json">
 </head>
 <body>
     <div class="container">
@@ -369,7 +369,8 @@
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker-sentinela.js')
+                // Ensure the path is relative to the root of the deployed application
+                navigator.serviceWorker.register('./service-worker-sentinela.js')
                     .then(registration => {
                         console.log('Service Worker de Aula360 registrado con éxito:', registration);
                     })
