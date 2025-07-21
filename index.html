@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentinela Escolar</title>
+    <title>Sentinela Escolar - Colegio Manuel José</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inter Font -->
@@ -52,11 +52,11 @@
             transition: background-color 0.2s, transform 0.1s;
         }
         .btn-primary {
-            background-color: #4299e1; /* Blue */
+            background-color: #2c5282; /* Darker blue */
             color: #ffffff;
         }
         .btn-primary:hover {
-            background-color: #3182ce; /* Darker blue on hover */
+            background-color: #2a4365; /* Even darker blue on hover */
             transform: translateY(-1px);
         }
         .btn-secondary {
@@ -84,7 +84,7 @@
         .message-box button {
             margin-top: 1rem;
             padding: 0.5rem 1rem;
-            background-color: #4299e1;
+            background-color: #2c5282;
             color: white;
             border: none;
             border-radius: 0.5rem;
@@ -99,16 +99,16 @@
         }
     </style>
     <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest-sentinela.json">
 </head>
 <body>
     <div class="container">
         <!-- Header -->
         <header class="flex items-center justify-between mb-6">
             <h1 class="text-3xl font-bold text-gray-800">Sentinela Escolar</h1>
-            <!-- Placeholder for a school-related logo if available -->
-            <img src="https://placehold.co/60x60/2c5282/ffffff?text=APP" alt="Logo Sentinela" class="logo">
+            <img src="https://placehold.co/60x60/2c5282/ffffff?text=C.M.J.I." alt="Logo Colegio Manuel José Irarrázaval" class="logo">
         </header>
+        <h2 class="text-xl font-semibold text-gray-700 text-center mb-6">Colegio Manuel José Irarrázaval</h2>
 
         <!-- Message Box for Alerts -->
         <div id="messageBox" class="message-box">
@@ -118,11 +118,16 @@
 
         <!-- Role Selection -->
         <div class="section-header">Selección de Rol</div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+            <button class="btn btn-secondary" onclick="selectRole('director')">Director</button>
+            <button class="btn btn-secondary" onclick="selectRole('encargado_convivencia')">Encargado de Convivencia Escolar</button>
             <button class="btn btn-secondary" onclick="selectRole('profesor')">Profesor / Inspector</button>
-            <button class="btn btn-secondary" onclick="selectRole('direccion')">Dirección / DAEM</button>
-            <button class="btn btn-secondary" onclick="selectRole('seguridad')">Seguridad Interna</button>
             <button class="btn btn-secondary" onclick="selectRole('estudiante')">Estudiante (Anónimo)</button>
+             <!-- Other roles from organigram are not implemented in this prototype but could be added -->
+            <button class="btn btn-secondary" onclick="selectRole('seguridad')" disabled>Seguridad Interna (Próximamente)</button>
+            <button class="btn btn-secondary" onclick="selectRole('coordinador_academico')" disabled>Coordinador Académico (Próximamente)</button>
+            <button class="btn btn-secondary" onclick="selectRole('jefe_administrativo')" disabled>Jefe Administrativo (Próximamente)</button>
+            <button class="btn btn-secondary" onclick="selectRole('encargado_formacion')" disabled>Encargado de Formación (Próximamente)</button>
         </div>
 
         <!-- Content Area based on Role -->
@@ -133,8 +138,8 @@
 
     <script>
         let currentRole = null;
-        let reports = []; // In-memory storage for reports
-        let novedades = []; // In-memory storage for novedades
+        let reports = []; // In-memory storage for incident/anonymous reports
+        let novedades = []; // In-memory storage for novelties
 
         // Message Box functions
         function showMessageBox(message) {
@@ -195,11 +200,12 @@
                     document.getElementById('incidentReportForm').addEventListener('submit', handleIncidentReport);
                     document.getElementById('novedadesForm').addEventListener('submit', handleNovedadReport);
                     break;
-                case 'direccion':
+                case 'director':
+                case 'encargado_convivencia':
                     contentArea.innerHTML = `
-                        <div class="section-header">Dirección / DAEM</div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Reportes Recibidos</h3>
-                        <div id="reportsList" class="space-y-4">
+                        <div class="section-header">${role === 'director' ? 'Director' : 'Encargado de Convivencia Escolar'}</div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Reportes de Incidentes y Denuncias Anónimas</h3>
+                        <div id="reportsList" class="space-y-4 mb-8">
                             <!-- Reports will be loaded here -->
                         </div>
                         <h3 class="text-lg font-semibold text-gray-800 mb-3 mt-8">Novedades Registradas</h3>
@@ -209,38 +215,6 @@
                     `;
                     renderReports();
                     renderNovedades();
-                    break;
-                case 'seguridad':
-                    contentArea.innerHTML = `
-                        <div class="section-header">Seguridad Interna</div>
-                        <p class="text-gray-600 mb-4">Funcionalidades para seguridad interna (ej: registro de rondas, marcaje de zonas inseguras) se implementarán aquí.</p>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Reportar Incidente</h3>
-                        <form id="incidentReportForm" class="mb-8">
-                            <div class="input-group">
-                                <label for="incidentType" class="block text-gray-700 text-sm font-medium mb-1">Tipo de Incidente:</label>
-                                <select id="incidentType" class="select-field" required>
-                                    <option value="">Seleccione tipo</option>
-                                    <option value="Pelea">Pelea</option>
-                                    <option value="Robo">Robo</option>
-                                    <option value="Ingreso de terceros">Ingreso de terceros</option>
-                                    <option value="Amenaza">Amenaza</option>
-                                    <option value="Armas">Armas</option>
-                                    <option value="Drogas">Drogas</option>
-                                    <option value="Otro">Otro</option>
-                                </select>
-                            </div>
-                            <div class="input-group">
-                                <label for="incidentDescription" class="block text-gray-700 text-sm font-medium mb-1">Descripción:</label>
-                                <textarea id="incidentDescription" class="textarea-field" rows="4" placeholder="Detalle el incidente..." required></textarea>
-                            </div>
-                            <div class="input-group">
-                                <label for="reporterName" class="block text-gray-700 text-sm font-medium mb-1">Su Nombre (opcional):</label>
-                                <input type="text" id="reporterName" class="input-field" placeholder="Ej: Juan Pérez">
-                            </div>
-                            <button type="submit" class="btn btn-primary w-full">Enviar Reporte</button>
-                        </form>
-                    `;
-                    document.getElementById('incidentReportForm').addEventListener('submit', handleIncidentReport);
                     break;
                 case 'estudiante':
                     contentArea.innerHTML = `
@@ -290,7 +264,8 @@
                 reporter: reporterName,
                 date: new Date().toLocaleString('es-CL'),
                 status: 'Pendiente',
-                role: 'Profesor/Inspector'
+                role: 'Profesor/Inspector',
+                category: 'Incidente'
             };
             reports.push(newReport);
             showMessageBox('¡Reporte de incidente enviado exitosamente!');
@@ -311,7 +286,8 @@
                 id: Date.now(),
                 description: novedadDescription,
                 date: new Date().toLocaleString('es-CL'),
-                role: 'Profesor/Inspector'
+                role: 'Profesor/Inspector',
+                category: 'Novedad'
             };
             novedades.push(newNovedad);
             showMessageBox('¡Novedad registrada exitosamente!');
@@ -336,7 +312,8 @@
                 reporter: 'Anónimo',
                 date: new Date().toLocaleString('es-CL'),
                 status: 'Alerta Preventiva',
-                role: 'Estudiante'
+                role: 'Estudiante',
+                category: 'Denuncia Anónima'
             };
             reports.push(newAnonymousReport);
             showMessageBox('¡Denuncia anónima enviada exitosamente!');
@@ -348,17 +325,20 @@
             const reportsList = document.getElementById('reportsList');
             reportsList.innerHTML = '';
             if (reports.length === 0) {
-                reportsList.innerHTML = '<p class="text-gray-500">No hay reportes para mostrar.</p>';
+                reportsList.innerHTML = '<p class="text-gray-500">No hay reportes ni denuncias para mostrar.</p>';
                 return;
             }
-            reports.forEach(report => {
+            // Sort reports by date, newest first
+            const sortedReports = [...reports].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            sortedReports.forEach(report => {
                 const reportCard = document.createElement('div');
                 reportCard.className = 'report-card';
                 reportCard.innerHTML = `
-                    <p class="font-semibold">Tipo: ${report.type}</p>
+                    <p class="font-semibold">Categoría: ${report.category} - Tipo: ${report.type}</p>
                     <p class="text-sm text-gray-700">Descripción: ${report.description}</p>
                     <p class="text-xs text-gray-500">Reportado por: ${report.reporter} (${report.role}) el ${report.date}</p>
-                    <p class="text-sm font-medium ${report.status === 'Pendiente' ? 'text-red-600' : 'text-green-600'}">Estado: ${report.status}</p>
+                    <p class="text-sm font-medium ${report.status === 'Pendiente' || report.status === 'Alerta Preventiva' ? 'text-red-600' : 'text-green-600'}">Estado: ${report.status}</p>
                 `;
                 reportsList.appendChild(reportCard);
             });
@@ -371,7 +351,10 @@
                 novedadesList.innerHTML = '<p class="text-gray-500">No hay novedades registradas.</p>';
                 return;
             }
-            novedades.forEach(novedad => {
+            // Sort novelties by date, newest first
+            const sortedNovedades = [...novedades].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            sortedNovedades.forEach(novedad => {
                 const novedadCard = document.createElement('div');
                 novedadCard.className = 'report-card'; // Reusing report-card style
                 novedadCard.innerHTML = `
