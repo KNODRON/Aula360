@@ -68,6 +68,30 @@
             background-color: #e2e8f0;
             transform: translateY(-1px);
         }
+        .btn-emergency-blue {
+            background-color: #3182ce; /* Blue for medical emergency */
+            color: #ffffff;
+            padding: 1.5rem;
+            font-size: 1.25rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .btn-emergency-blue:hover {
+            background-color: #2b6cb0;
+            transform: translateY(-2px);
+        }
+        .btn-emergency-red {
+            background-color: #e53e3e; /* Red for fire/attack emergency */
+            color: #ffffff;
+            padding: 1.5rem;
+            font-size: 1.25rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .btn-emergency-red:hover {
+            background-color: #c53030;
+            transform: translateY(-2px);
+        }
         .message-box {
             position: fixed;
             top: 50%;
@@ -118,16 +142,22 @@
 
         <!-- Role Selection -->
         <div class="section-header">Selección de Rol</div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+        <div class="grid grid-cols-2 gap-4 mb-8">
             <button class="btn btn-secondary" onclick="selectRole('director')">Director</button>
             <button class="btn btn-secondary" onclick="selectRole('encargado_convivencia')">Encargado de Convivencia Escolar</button>
             <button class="btn btn-secondary" onclick="selectRole('profesor')">Profesor / Inspector</button>
             <button class="btn btn-secondary" onclick="selectRole('estudiante')">Estudiante (Anónimo)</button>
-             <!-- Other roles from organigram are not implemented in this prototype but could be added -->
-            <button class="btn btn-secondary" onclick="selectRole('seguridad')" disabled>Seguridad Interna (Próximamente)</button>
-            <button class="btn btn-secondary" onclick="selectRole('coordinador_academico')" disabled>Coordinador Académico (Próximamente)</button>
-            <button class="btn btn-secondary" onclick="selectRole('jefe_administrativo')" disabled>Jefe Administrativo (Próximamente)</button>
-            <button class="btn btn-secondary" onclick="selectRole('encargado_formacion')" disabled>Encargado de Formación (Próximamente)</button>
+            <button class="btn btn-secondary" onclick="selectRole('seguridad')">Seguridad Interna</button>
+            <button class="btn btn-secondary" onclick="selectRole('coordinador_academico')">Coordinador Académico</button>
+            <button class="btn btn-secondary" onclick="selectRole('jefe_administrativo')">Jefe Administrativo</button>
+            <button class="btn btn-secondary" onclick="selectRole('encargado_formacion')">Encargado de Formación</button>
+        </div>
+
+        <!-- Emergency Buttons -->
+        <div class="section-header !bg-red-700">Alertas de Emergencia</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <button class="btn btn-emergency-blue" onclick="handleMedicalEmergency()">Emergencia Médica</button>
+            <button class="btn btn-emergency-red" onclick="handleFireAttackEmergency()">Incendio / Ataque</button>
         </div>
 
         <!-- Manual Install Button -->
@@ -222,6 +252,70 @@
                     renderReports();
                     renderNovedades();
                     break;
+                case 'seguridad':
+                    contentArea.innerHTML = `
+                        <div class="section-header">Seguridad Interna</div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Reportar Incidente / Observación</h3>
+                        <form id="incidentReportForm" class="mb-8">
+                            <div class="input-group">
+                                <label for="incidentType" class="block text-gray-700 text-sm font-medium mb-1">Tipo de Reporte:</label>
+                                <select id="incidentType" class="select-field" required>
+                                    <option value="">Seleccione tipo</option>
+                                    <option value="Incidente">Incidente</option>
+                                    <option value="Observación de Seguridad">Observación de Seguridad</option>
+                                    <option value="Ronda Realizada">Ronda Realizada</option>
+                                    <option value="Zona Insegura Marcada">Zona Insegura Marcada</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="incidentDescription" class="block text-gray-700 text-sm font-medium mb-1">Detalle:</label>
+                                <textarea id="incidentDescription" class="textarea-field" rows="4" placeholder="Detalle el incidente u observación..." required></textarea>
+                            </div>
+                            <div class="input-group">
+                                <label for="reporterName" class="block text-gray-700 text-sm font-medium mb-1">Su Nombre (opcional):</label>
+                                <input type="text" id="reporterName" class="input-field" placeholder="Ej: Agente de Seguridad 1">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-full">Enviar Reporte</button>
+                        </form>
+                    `;
+                    document.getElementById('incidentReportForm').addEventListener('submit', handleIncidentReport);
+                    break;
+                case 'coordinador_academico':
+                    contentArea.innerHTML = `
+                        <div class="section-header">Coordinador Académico</div>
+                        <p class="text-gray-600 mb-4">Este rol es clave en la gestión pedagógica y curricular del colegio.</p>
+                        <p class="text-gray-600">Funcionalidades futuras podrían incluir:</p>
+                        <ul class="list-disc list-inside text-gray-600 ml-4">
+                            <li>Gestión de horarios y planificación académica.</li>
+                            <li>Seguimiento del rendimiento estudiantil.</li>
+                            <li>Reportes relacionados con el currículo y evaluaciones.</li>
+                        </ul>
+                    `;
+                    break;
+                case 'jefe_administrativo':
+                    contentArea.innerHTML = `
+                        <div class="section-header">Jefe Administrativo</div>
+                        <p class="text-gray-600 mb-4">Este rol se encarga de la gestión de los recursos y la infraestructura del colegio.</p>
+                        <p class="text-gray-600">Funcionalidades futuras podrían incluir:</p>
+                        <ul class="list-disc list-inside text-gray-600 ml-4">
+                            <li>Gestión de inventario y activos.</li>
+                            <li>Reporte y seguimiento de mantenimiento de instalaciones.</li>
+                            <li>Gestión de proveedores y finanzas básicas.</li>
+                        </ul>
+                    `;
+                    break;
+                case 'encargado_formacion':
+                    contentArea.innerHTML = `
+                        <div class="section-header">Encargado de Formación</div>
+                        <p class="text-gray-600 mb-4">Este rol se enfoca en el desarrollo integral y valórico de los estudiantes.</p>
+                        <p class="text-gray-600">Funcionalidades futuras podrían incluir:</p>
+                        <ul class="list-disc list-inside text-gray-600 ml-4">
+                            <li>Registro y seguimiento de talleres y actividades extracurriculares.</li>
+                            <li>Gestión de programas de orientación y apoyo estudiantil.</li>
+                            <li>Reportes sobre participación y desarrollo formativo.</li>
+                        </ul>
+                    `;
+                    break;
                 case 'estudiante':
                     contentArea.innerHTML = `
                         <div class="section-header">Estudiante (Denuncia Anónima)</div>
@@ -270,7 +364,7 @@
                 reporter: reporterName,
                 date: new Date().toLocaleString('es-CL'),
                 status: 'Pendiente',
-                role: 'Profesor/Inspector',
+                role: currentRole === 'seguridad' ? 'Seguridad Interna' : 'Profesor/Inspector', // Differentiate reporter role
                 category: 'Incidente'
             };
             reports.push(newReport);
@@ -370,6 +464,19 @@
                 `;
                 novedadesList.appendChild(novedadCard);
             });
+        }
+
+        // Emergency Button Handlers
+        function handleMedicalEmergency() {
+            showMessageBox('¡ALERTA DE EMERGENCIA MÉDICA ENVIADA! El equipo de respuesta ha sido notificado.');
+            // In a real app, this would trigger actual notifications
+            console.log('Alerta de Emergencia Médica disparada.');
+        }
+
+        function handleFireAttackEmergency() {
+            showMessageBox('¡ALERTA DE INCENDIO / ATAQUE ENVIADA! El equipo de emergencia ha sido notificado.');
+            // In a real app, this would trigger actual notifications
+            console.log('Alerta de Incendio / Ataque disparada.');
         }
 
         // PWA Installability Logic
