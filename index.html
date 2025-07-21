@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentinela Escolar - Colegio Manuel José</title>
+    <title>Aula360 - Colegio Manuel José Irarrázaval</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inter Font -->
@@ -105,7 +105,7 @@
     <div class="container">
         <!-- Header -->
         <header class="flex items-center justify-between mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">Sentinela Escolar</h1>
+            <h1 class="text-3xl font-bold text-gray-800">Aula360</h1>
             <img src="https://placehold.co/60x60/2c5282/ffffff?text=C.M.J.I." alt="Logo Colegio Manuel José Irarrázaval" class="logo">
         </header>
         <h2 class="text-xl font-semibold text-gray-700 text-center mb-6">Colegio Manuel José Irarrázaval</h2>
@@ -371,10 +371,10 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/service-worker-sentinela.js')
                     .then(registration => {
-                        console.log('Service Worker de Sentinela Escolar registrado con éxito:', registration);
+                        console.log('Service Worker de Aula360 registrado con éxito:', registration);
                     })
                     .catch(error => {
-                        console.log('Fallo el registro del Service Worker de Sentinela Escolar:', error);
+                        console.log('Fallo el registro del Service Worker de Aula360:', error);
                     });
             });
         }
