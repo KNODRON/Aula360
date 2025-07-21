@@ -130,6 +130,11 @@
             <button class="btn btn-secondary" onclick="selectRole('encargado_formacion')" disabled>Encargado de Formación (Próximamente)</button>
         </div>
 
+        <!-- Manual Install Button -->
+        <div class="text-center mb-8">
+            <button id="installButton" class="btn btn-primary hidden">Instalar Aula360</button>
+        </div>
+
         <!-- Content Area based on Role -->
         <div id="contentArea">
             <p class="text-center text-gray-600">Por favor, seleccione su rol para continuar.</p>
@@ -140,6 +145,7 @@
         let currentRole = null;
         let reports = []; // In-memory storage for incident/anonymous reports
         let novedades = []; // In-memory storage for novelties
+        let deferredPrompt; // To store the beforeinstallprompt event
 
         // Message Box functions
         function showMessageBox(message) {
@@ -234,7 +240,7 @@
                             </div>
                             <div class="input-group">
                                 <label for="anonymousReportDescription" class="block text-gray-700 text-sm font-medium mb-1">Detalle (opcional):</label>
-                                <textarea id="anonymousReportDescription" class="textarea-field" rows="4" placeholder="Proporcione detalles de forma anónima..."></textarea>
+                                <textarea id="anonymousReportDescription" class="textarea-field" rows="4" placeholder="Proporcionar detalles de forma anónima..."></textarea>
                             </div>
                             <button type="submit" class="btn btn-primary w-full">Enviar Denuncia Anónima</button>
                         </form>
@@ -365,6 +371,42 @@
                 novedadesList.appendChild(novedadCard);
             });
         }
+
+        // PWA Installability Logic
+        const installButton = document.getElementById('installButton');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 76 and later from showing the mini-infobar automatically
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            deferredPrompt = e;
+            // Update UI to notify the user they can add to home screen
+            installButton.classList.remove('hidden');
+            console.log('beforeinstallprompt event fired and captured.');
+        });
+
+        installButton.addEventListener('click', (e) => {
+            // Hide the install button
+            installButton.classList.add('hidden');
+            // Show the install prompt
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                // Wait for the user to respond to the prompt
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the A2HS prompt');
+                        showMessageBox('¡Aula360 instalada con éxito!');
+                    } else {
+                        console.log('User dismissed the A2HS prompt');
+                        showMessageBox('Instalación cancelada.');
+                    }
+                    deferredPrompt = null; // Clear the deferred prompt
+                });
+            } else {
+                showMessageBox('La opción de instalación no está disponible en este momento. Intente recargar la página o añádala manualmente desde el menú del navegador.');
+            }
+        });
+
 
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
